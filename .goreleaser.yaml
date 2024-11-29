@@ -21,6 +21,21 @@ nfpms:
       - deb
       - rpm
       - apk
+    maintainer: "carlos becker <carlos@becker.software>"
+
+brews:
+  - name: foo
+    repository:
+      name: foo
+      owner: bar
+
+winget:
+  - publisher: "Becker Software"
+    repository:
+      name: winget
+      owner: microsoft
+    short_description: Example Zig software
+    license: MIT
 
 archives:
   - format: tar.gz
