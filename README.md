@@ -1,3 +1,3 @@
-# example-zig
+# GoReleaser Example using Zig
 
-Example repository building a Zig binary with GoReleaser.
+This uses GoReleaser v2.5+ to build and release a Zig project with GoReleaser.
