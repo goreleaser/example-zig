@@ -79,8 +79,6 @@ sboms:
 # Sign binaries with cosign.
 signs:
   - cmd: cosign
-    env:
-      - COSIGN_EXPERIMENTAL=1
     certificate: "${artifact}.pem"
     args:
       - sign-blob
@@ -132,8 +130,6 @@ docker_manifests:
 # Sign the Docker images with cosign as well.
 docker_signs:
   - cmd: cosign
-    env:
-      - COSIGN_EXPERIMENTAL=1
     artifacts: images
     output: true
     args:
