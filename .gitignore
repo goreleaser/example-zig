@@ -1,5 +1,5 @@
-
+# Added by goreleaser init:
 dist/
-zig-out
-dist/
-.zig-cache
+.intentionally-empty-file.o
+zig-out/
+.zig-cache/

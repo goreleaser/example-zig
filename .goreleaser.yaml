@@ -8,53 +8,131 @@
 
 version: 2
 
-project_name: example-zig
+project_name: example
 
+# Actually builds the binaries.
 builds:
   - builder: zig
+    flags:
+      - -Doptimize=ReleaseSafe
+    targets:
+      - x86_64-linux
+      - x86_64-windows
+      - aarch64-linux
+      - x86_64-macos
+      - aarch64-macos
 
-universal_binaries:
-  - replace: true
-
-nfpms:
-  - formats:
-      - deb
-      - rpm
-      - apk
-    maintainer: "carlos becker <carlos@becker.software>"
-
-brews:
-  - name: foo
-    repository:
-      name: foo
-      owner: bar
-
-winget:
-  - publisher: "Becker Software"
-    repository:
-      name: winget
-      owner: microsoft
-    short_description: Example Zig software
-    license: MIT
-
+# Creates archives for each target.
 archives:
   - format: tar.gz
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
-      {{- .Os }}_
+      {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
     # use zip for windows archives
     format_overrides:
       - goos: windows
         format: zip
 
+# Changelog configuration (will be in the github release).
 changelog:
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+
+# A footer to add to all releases.
+release:
+  footer: >-
+
+    ---
+
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+
+# Creates Linux packages.
+nfpms:
+  - file_name_template: "{{ .ConventionalFileName }}"
+    maintainer: Carlos Alexandro Becker <carlos@becker.software>
+    formats:
+      - deb
+      - apk
+      - rpm
+
+# Creates Darwin universal binaries.
+universal_binaries:
+  - replace: true
+
+# Enables source archives.
+source:
+  enabled: true
+
+# SBOMs for the archives and source archives.
+sboms:
+  - artifacts: archive
+  - id: source
+    artifacts: source
+
+# Sign binaries with cosign.
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+# Create Docker images.
+# We create a manifest below, so here the images need the suffix with the
+# architecture.
+dockers:
+  - image_templates:
+      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-arm64"
+    dockerfile: Dockerfile
+    goarch: arm64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - image_templates:
+      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-amd64"
+    dockerfile: Dockerfile
+    goarch: amd64
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+
+# Here we join both images into a Docker manifest.
+docker_manifests:
+  - name_template: "ghcr.io/goreleaser/example-zig:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-arm64"
+      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-amd64"
+
+# Sign the Docker images with cosign as well.
+docker_signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    artifacts: images
+    output: true
+    args:
+      - "sign"
+      - "${artifact}"
+      - "--yes"
