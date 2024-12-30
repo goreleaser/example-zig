@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v1
-      - run: cargo build --test
-      - run: cargo build
+      - run: zig build --test
+      - run: zig build
   dependabot:
     needs: [build]
     runs-on: ubuntu-latest
