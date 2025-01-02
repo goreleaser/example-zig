@@ -72,9 +72,7 @@ source:
 
 # SBOMs for the archives and source archives.
 sboms:
-  - artifacts: archive
-  - id: source
-    artifacts: source
+  - artifacts: any
 
 # Sign binaries with cosign.
 signs:
@@ -87,7 +85,6 @@ signs:
       - "${artifact}"
       - "--yes"
     artifacts: checksum
-    output: true
 
 # Create Docker images.
 # We create a manifest below, so here the images need the suffix with the
@@ -118,7 +115,7 @@ dockers:
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
+      - "--platform=linux/amd64"
 
 # Here we join both images into a Docker manifest.
 docker_manifests:
@@ -130,8 +127,7 @@ docker_manifests:
 # Sign the Docker images with cosign as well.
 docker_signs:
   - cmd: cosign
-    artifacts: images
-    output: true
+    artifacts: manifests
     args:
       - "sign"
       - "${artifact}"
