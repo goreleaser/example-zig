@@ -72,7 +72,7 @@ source:
 
 # SBOMs for the archives and source archives.
 sboms:
-  - artifacts: any
+  - artifacts: archive
 
 # Sign binaries with cosign.
 signs:
