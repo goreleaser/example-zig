@@ -70,7 +70,7 @@ universal_binaries:
 source:
   enabled: true
 
-# SBOMs for the archives and source archives.
+# SBOMs for the archives.
 sboms:
   - artifacts: archive
 
