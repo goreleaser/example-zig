@@ -15,6 +15,9 @@ builds:
   - builder: zig
     flags:
       - -Doptimize=ReleaseSafe
+      - -Dgit_commit={{ .Commit }}
+      - -Dversion={{ .Version }}
+      - -Ddate={{ .Date }}
     targets:
       - x86_64-linux
       - x86_64-windows

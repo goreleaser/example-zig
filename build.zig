@@ -4,6 +4,19 @@ const std = @import("std");
 // declaratively construct a build graph that will be executed by an external
 // runner.
 pub fn build(b: *std.Build) void {
+    // Declare the custom options:
+    const git_commit = b.option([]const u8, "git_commit", "Git commit hash to embed") orelse "unknown";
+    const version = b.option([]const u8, "version", "Version to embed") orelse "unknown";
+    const date = b.option([]const u8, "date", "Date to embed") orelse "unknown";
+
+    // Create the options step
+    const options = b.addOptions();
+
+    // Add the value to the options (type must match)
+    options.addOption([]const u8, "git_commit", git_commit);
+    options.addOption([]const u8, "version", version);
+    options.addOption([]const u8, "date", date);
+
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
     // means any target is allowed, and the default is native. Other options
@@ -64,6 +77,8 @@ pub fn build(b: *std.Build) void {
         .name = "example",
         .root_module = exe_mod,
     });
+
+    exe.root_module.addOptions("build_options", options);
 
     // This declares intent for the executable to be installed into the
     // standard location when the user invokes the "install" step (the default
