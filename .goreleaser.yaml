@@ -27,7 +27,7 @@ builds:
 
 # Creates archives for each target.
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -38,7 +38,7 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 
 # Changelog configuration (will be in the github release).
 changelog:
@@ -80,57 +80,30 @@ sboms:
 # Sign binaries with cosign.
 signs:
   - cmd: cosign
-    certificate: "${artifact}.pem"
+    signature: "${artifact}.sigstore.json"
     args:
       - sign-blob
-      - "--output-certificate=${certificate}"
-      - "--output-signature=${signature}"
+      - "--bundle=${signature}"
       - "${artifact}"
       - "--yes"
     artifacts: checksum
 
 # Create Docker images.
-# We create a manifest below, so here the images need the suffix with the
-# architecture.
-dockers:
-  - image_templates:
-      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-arm64"
-    dockerfile: Dockerfile
-    goarch: arm64
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/arm64"
-  - image_templates:
-      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-amd64"
-    dockerfile: Dockerfile
-    goarch: amd64
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.name={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-      - "--platform=linux/amd64"
-
-# Here we join both images into a Docker manifest.
-docker_manifests:
-  - name_template: "ghcr.io/goreleaser/example-zig:{{ .Tag }}"
-    image_templates:
-      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-arm64"
-      - "ghcr.io/goreleaser/example-zig:{{ .Tag }}-amd64"
+dockers_v2:
+  - images:
+      - "ghcr.io/goreleaser/example-zig"
+    tags:
+      - "{{ .Tag }}"
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
 
 # Sign the Docker images with cosign as well.
 docker_signs:
   - cmd: cosign
-    artifacts: manifests
     args:
       - "sign"
       - "${artifact}"
@@ -138,12 +111,11 @@ docker_signs:
 
 # Sets up homebrew-taps.
 # PS: this will require a personal access token, as it is cross-repository.
-brews:
+homebrew_casks:
   - repository:
       owner: goreleaser
       name: example-homebrew-tap
       token: "{{ .Env.GH_PAT }}"
-    directory: Formula
     homepage: https://goreleaser.com
     description: Example zig release.
     license: MIT
