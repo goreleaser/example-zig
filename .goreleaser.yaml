@@ -110,12 +110,13 @@ docker_signs:
       - "--yes"
 
 # Sets up homebrew-taps.
-# PS: this will require a personal access token, as it is cross-repository.
 homebrew_casks:
   - repository:
       owner: goreleaser
       name: example-homebrew-tap
-      token: "{{ .Env.GH_PAT }}"
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      use_github_app_token: true
     homepage: https://goreleaser.com
     description: Example zig release.
     license: MIT
